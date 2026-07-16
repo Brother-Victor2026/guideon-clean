@@ -602,7 +602,7 @@ async function saveProfile(){
   try{
     if(n||p){const r=await fetch('/api/profile',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:tok,name:n,password:p})});const d=await r.json();if(d.success&&n){localStorage.setItem('gname',n);document.getElementById('uname').textContent='👤 '+n;}}
     await fetch('/api/instructions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:tok,instructions:inst})});
-    alert('✅ Profil mis à jour!');document.getElementById('prof').style.display='none';
+    confirm('✅ Profil mis à jour!');document.getElementById('prof').style.display='none';
   }catch(e){alert('Erreur sauvegarde');}
 }
 
