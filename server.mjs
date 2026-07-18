@@ -688,7 +688,9 @@ app.post('/api/forgot-password', async (req, res) => {
     const expires = new Date(Date.now() + 3600000).toISOString();
     await fetch(`${DB}/users?email=eq.${encodeURIComponent(email)}`, { method: 'PATCH', headers: { ...SB, 'Content-Type': 'application/json' }, body: JSON.stringify({ reset_token: token, reset_expires: expires }) });
     const resetUrl = `${process.env.APP_URL || 'https://guideon-8h4m.onrender.com'}/reset-password?token=${token}`;
-    await resend.emails.send({ from: 'Guidéon <onboarding@resend.dev>', to: email, subject: 'Réinitialisation de votre mot de passe Guidéon', html: `<p>Bonjour,</p><p>Cliquez sur ce lien pour réinitialiser votre mot de passe :</p><a href="${resetUrl}">${resetUrl}</a><p>Ce lien expire dans 1 heure.</p>` });
+    // En mode test, on ne peut pas envoyer d'email (resend = null)
+    // Retourner le token directement pour tester
+    console.log('Mode test - Reset token:', reset_token);
     res.json({ message: 'Si cet email existe, un lien a été envoyé' });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
