@@ -6,10 +6,8 @@ import path from 'path';
 import { createClient } from '@supabase/supabase-js';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
-import nodemailer from 'nodemailer';
 import { Resend } from 'resend';
 import multer from 'multer';
-const resend = null; // Resend désactivé pour tests
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -64,14 +62,8 @@ app.use(express.json({ limit: '15mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 
-// Configurer Nodemailer
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
+// Initialiser Resend
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 app.post('/api/register', async (req, res) => {
   try {
@@ -701,15 +693,14 @@ app.post('/api/forgot-password', async (req, res) => {
     const resetUrl = `${process.env.APP_URL || 'https://guideon-8h4m.onrender.com'}/reset-password?token=${token}`;
     // En mode test, on ne peut pas envoyer d'email (resend = null)
     // Retourner le token directement pour tester
-                // Envoyer l'email avec Nodemailer
-                const mailOptions = {
-                  from: process.env.EMAIL_USER,
-                  to: email,
-                  subject: 'Réinitialisation de votre mot de passe - Guidéon',
-                  html: `<h2>Réinitialisation</h2><p><a href="${resetUrl}">Cliquez ici</a></p>`
-                };
+                // Envoyer l'email avec Resend
                 try {
-                  await transporter.sendMail(mailOptions);
+                  await resend.emails.send({
+                    from: 'Guidéon <onboarding@resend.dev>',
+                    to: email,
+                    subject: 'Réinitialisation de votre mot de passe - Guidéon',
+                    html: `<h2>Réinitialisation</h2><p><a href="${resetUrl}">Réinitialiser mon mot de passe</a></p><p>Lien expire dans 1 heure.</p>`
+                  });
                   console.log('✓ Email envoyé à:', email);
                 } catch (err) {
                   console.error('✗ Erreur email:', err.message);
