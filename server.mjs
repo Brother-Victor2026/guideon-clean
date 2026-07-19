@@ -6,6 +6,7 @@ import path from 'path';
 import { createClient } from '@supabase/supabase-js';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
+import nodemailer from 'nodemailer';
 import { Resend } from 'resend';
 import multer from 'multer';
 const resend = null; // Resend désactivé pour tests
@@ -61,6 +62,16 @@ const SYSTEM = { role: "system", content: "Tu es Guideon, un assistant IA intell
 
 app.use(express.json({ limit: '15mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+
+// Configurer Nodemailer
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
 
 app.post('/api/register', async (req, res) => {
   try {
