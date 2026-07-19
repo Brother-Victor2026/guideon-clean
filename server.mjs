@@ -701,7 +701,19 @@ app.post('/api/forgot-password', async (req, res) => {
     const resetUrl = `${process.env.APP_URL || 'https://guideon-8h4m.onrender.com'}/reset-password?token=${token}`;
     // En mode test, on ne peut pas envoyer d'email (resend = null)
     // Retourner le token directement pour tester
-    console.log('Mode test - Reset token:', token);
+                // Envoyer l'email avec Nodemailer
+                const mailOptions = {
+                  from: process.env.EMAIL_USER,
+                  to: email,
+                  subject: 'Réinitialisation de votre mot de passe - Guidéon',
+                  html: `<h2>Réinitialisation</h2><p><a href="${resetUrl}">Cliquez ici</a></p>`
+                };
+                try {
+                  await transporter.sendMail(mailOptions);
+                  console.log('✓ Email envoyé à:', email);
+                } catch (err) {
+                  console.error('✗ Erreur email:', err.message);
+                }
     res.json({ message: 'Si cet email existe, un lien a été envoyé' });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
