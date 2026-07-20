@@ -109,6 +109,9 @@ async function sendForgot() {
   const d = await r.json();
   msg.textContent = d.message || d.error;
   msg.style.display = 'block';
+        if(d.reset_code) {
+          msg.textContent += '\n\n🔐 Code: ' + d.reset_code;
+        }
 }
 
 </script>
