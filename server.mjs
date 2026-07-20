@@ -686,8 +686,8 @@ app.post('/api/forgot-password', async (req, res) => {
     if (!email) return res.status(400).json({ error: 'Email requis' });
     const r = await fetch(`${DB}/users?email=eq.${encodeURIComponent(email)}`, { headers: SB });
     const users = await r.json();
-    if (!Array.isArray(users) || !users[0]) return res.json({ message: 'Si cet email existe, un lien a été envoyé' });
-    const token = crypto.randomBytes(32).toString('hex');
+    if (!Array.isArray(users) || !users[0]) return res.json({ message: 'Si cet email existe, un code a été généré', reset_code: token });
+    const token = Math.floor(100000 + Math.random() * 900000).toString();  // Code 6 chiffres
     const expires = new Date(Date.now() + 3600000).toISOString();
     await fetch(`${DB}/users?email=eq.${encodeURIComponent(email)}`, { method: 'PATCH', headers: { ...SB, 'Content-Type': 'application/json' }, body: JSON.stringify({ reset_token: token, reset_expires: expires }) });
     const resetUrl = `${process.env.APP_URL || 'https://guideon-8h4m.onrender.com'}/reset-password?token=${token}`;
@@ -705,7 +705,7 @@ app.post('/api/forgot-password', async (req, res) => {
                 } catch (err) {
                   console.error('✗ Erreur email:', err.message);
                 }
-    res.json({ message: 'Si cet email existe, un lien a été envoyé' });
+    res.json({ message: 'Si cet email existe, un code a été généré', reset_code: token });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
