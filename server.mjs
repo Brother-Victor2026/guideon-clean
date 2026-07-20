@@ -696,7 +696,7 @@ app.post('/api/forgot-password', async (req, res) => {
                 // Envoyer l'email avec Resend
                 try {
                   await resend.emails.send({
-                    from: 'Guidéon <onboarding@resend.dev>',
+                    from: 'Guidéon <codjovictorbossou@gmail.com>',
                     to: email,
                     subject: 'Réinitialisation de votre mot de passe - Guidéon',
                     html: `<h2>Réinitialisation</h2><p><a href="${resetUrl}">Réinitialiser mon mot de passe</a></p><p>Lien expire dans 1 heure.</p>`
