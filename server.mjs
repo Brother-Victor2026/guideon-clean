@@ -206,7 +206,7 @@ app.post('/api/chat', async (req, res) => {
     const visualBoost = wantsVisual ? "\n\nIMPORTANT: la demande actuelle de l'utilisateur appelle "
       + "clairement un contenu visuel ou narratif. Tu DOIS terminer ta reponse par la balise "
       + "[GENERATE_IMAGE: description en anglais] decrivant ce qui a ete demande ou raconte." : '';
-    // Charger memories utilisateur
+    // Charger memories utilisateureturn
   let memoriesText = '';
   if (user && user.id) {
     try {
@@ -692,7 +692,7 @@ app.post('/api/forgot-password', async (req, res) => {
     await fetch(`${DB}/users?email=eq.${encodeURIComponent(email)}`, { method: 'PATCH', headers: { ...SB, 'Content-Type': 'application/json' }, body: JSON.stringify({ reset_token: token, reset_expires: expires }) });
     const resetUrl = `${process.env.APP_URL || 'https://guideon-8h4m.onrender.com'}/reset-password?token=${token}`;
     // En mode test, on ne peut pas envoyer d'email (resend = null)
-    // Retourner le token directement pour tester
+    // Retourner le token directement pour testereturn
                 // Envoyer l'email avec Resend
                 try {
                   await resend.emails.send({
@@ -739,7 +739,7 @@ app.get('/reset-password', (req, res) => {
     'function toggleNp(){var el=document.getElementById("np");el.type=el.type==="password"?"text":"password";}',
     'function toggleCp(){var el=document.getElementById("cp");el.type=el.type==="password"?"text":"password";}',
     '<script>',
-    'var tok="' + token + '";',
+    "var code=document.getElementById('code').value;",
     'async function go(){',
     'var np=document.getElementById("np").value;',
     'var cp=document.getElementById("cp").value;',
