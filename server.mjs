@@ -726,6 +726,8 @@ app.get('/reset-password', (req, res) => {
     '#msg{color:#a78bfa;font-size:13px;margin-top:10px;text-align:center}',
     '</style></head><body>',
     '<div class="card">',
+    '<h2>Code de réinitialisation</h2>',
+    '<input type="text" id="code" placeholder="Code (6 chiffres)" maxlength="6">',
     '<h2>Nouveau mot de passe</h2>',
     '<input type="password" id="np" placeholder="Nouveau mot de passe">',
     '<input type="password" id="cp" placeholder="Confirmer le mot de passe">',
