@@ -743,7 +743,7 @@ app.get('/reset-password', (req, res) => {
     'var msg=document.getElementById("msg");',
     'if(!np||np.length<6){msg.textContent="Minimum 6 caracteres.";return}',
     'if(np!==cp){msg.textContent="Les mots de passe ne correspondent pas.";return}',
-    'var r=await fetch("/api/reset-password",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:tok,password:np})});',
+    'var r=await fetch("/api/reset-password",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:code,password:np})});',
     'var d=await r.json();',
     'if(r.ok){msg.textContent="Mot de passe mis a jour. Redirection...";setTimeout(()=>window.location.href="/",2000);}',
     'else{msg.textContent=d.error||"Erreur.";}',
