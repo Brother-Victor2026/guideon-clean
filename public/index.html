@@ -152,62 +152,6 @@ window.addEventListener('load', function() {
 });
 </script>
 
-<div class="mo" id="lm">
-<div class="mb2">
-<div style="font-size:40px;margin-bottom:10px">🧠</div>
-<h2>Guideon</h2><p>Entrez le mot de passe</p>
-<div style="position:relative;width:100%;"><input type="password" id="pi" placeholder="Mot de passe..." onkeydown="if(event.key==='Enter')cp()" style="width:100%;padding-right:40px;box-sizing:border-box;"><button type="button" onclick="togglePwd('pi',this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#a78bfa;font-size:14px;">Voir</button></div>
-<div class="er" id="pe">Mot de passe incorrect</div>
-<button onclick="cp()">Entrer</button>
-<p style="text-align:center;margin-top:8px;"><a href="#" onclick="showForgot()" style="color:#a78bfa;font-size:13px;">Mot de passe oublié ?</a></p>
-</div></div>
-<header>
-<div class="logo">🧠</div>
-<div class="hi"><h1>Guideon</h1><p>Assistant sage et philosophique</p></div>
-<div class="hb">
-<div class="st"><div class="sd"></div><span>En ligne</span></div>
-<button class="ib" onclick="tvv()" id="vt">🔊</button>
-</div></header>
-<div class="pl">
-<button class="pb" onclick="up('/traduire ')">🌍 Traduire</button>
-<button class="pb" onclick="up('/resume ')">📝 Resumer</button>
-<button class="pb" onclick="up('/image ')">🎨 Image</button>
-<button class="pb" onclick="up('!web ')">🌐 Web</button>
-t			<button class="pb" onclick="regenerateResponse(this)" title="Régénérer">↻</button>
-<button class="pp" onclick="document.getElementById('pdfUploadInput').click();">📄 PDF</button><input type="file" id="pdfUploadInput" accept=".pdf" style="display:none;">
-<button class="pb" onclick="cc()">🗑️ Effacer</button>
-</div>
-<div id="chat">
-<div class="wl"><div class="big">🧠</div><h2>Bonjour ! Je suis votre assistant virtuel Guideon</h2><p>Que puis-je faire pour vous ?</p></div>
-</div>
-<div class="ia">
-<div id="app-footer" style="position:fixed;bottom:8px;right:12px;font-size:10px;color:#6b7280;z-index:100;pointer-events:none;">🧠 Guidéon peut faire des erreurs</div>
-<textarea id="ui" placeholder="Ecrivez votre message..." rows="1"></textarea>
-<button class="mb" id="mb" onclick="tm()">🎤</button>
-<button class="sb" onclick="sm()">➤</button>
-</div>
-<script>
-const PW="guideon2024";
-  const userId=localStorage.getItem("gid")||crypto.randomUUID();localStorage.setItem("gid",userId);
-let chatHistory=[],ve=false,rec=null,il=false;
-function cp(){const p=document.getElementById('pi').value;if(p===PW){document.getElementById('lm').classList.remove('show');}else{document.getElementById('pe').style.display='block';}}
-function tvv(){ve=!ve;document.getElementById('vt').textContent=ve?'🔊':'🔇';}
-function sp(t){if(!ve)return;const u=new SpeechSynthesisUtterance(t);u.lang='fr-FR';u.rate=0.9;speechSynthesis.speak(u);}function speak(btn){
-const bub=btn.closest('.mc').querySelector('.bub');
-if(speechSynthesis.speaking){
-speechSynthesis.cancel();
-document.querySelectorAll('.cb').forEach(b=>{if(b.textContent.indexOf('⏹️')>=0)b.textContent='🔊';});
-document.querySelectorAll('.tts-w').forEach(s=>s.classList.remove('tts-active'));
-return;
-}
-if(!bub.dataset.orig)bub.dataset.orig=bub.innerHTML;
-const text=bub.innerText;
-const words=[];const re2=/\S+/g;let mm;
-while((mm=re2.exec(text))!==null){words.push({w:mm[0],s:mm.index,e:mm.index+mm[0].length});}
-let html='';let last=0;
-words.forEach((w,i)=>{html+=text.slice(last,w.s).replace(/\n/g,'<br>');html+='<span class="tts-w" data-i="'+i+'">'+w.w+'</span>';last=w.e;});
-html+=text.slice(last).replace(/\n/g,'<br>');
-bub.innerHTML=html;
 const u=new SpeechSynthesisUtterance(text);
 u.lang='fr-FR';u.rate=0.9;
 
