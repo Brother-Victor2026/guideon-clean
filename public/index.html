@@ -60,25 +60,6 @@ header{background:linear-gradient(135deg,#1a0533,#0d1f4d);padding:14px 16px;disp
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
 const API_URL = window.location.origin;
-
-function switchTab(tabName) {
-    var tabs = document.querySelectorAll('.tab-button');
-    var panes = document.querySelectorAll('[data-tab-pane]');
-    
-    tabs.forEach(function(tab) {
-        tab.classList.remove('active');
-        if (tab.getAttribute('data-tab') === tabName) {
-            tab.classList.add('active');
-        }
-    });
-    
-    panes.forEach(function(pane) {
-        pane.style.display = 'none';
-        if (pane.getAttribute('data-tab-pane') === tabName) {
-            pane.style.display = 'block';
-        }
-    });
-}
 document.addEventListener('DOMContentLoaded', () => {
 document.getElementById('pdfUploadInput').addEventListener('change', async (e) => {
   alert('PDF file selected: ' + (e.target.files[0]?.name || 'unknown'));
@@ -152,6 +133,62 @@ window.addEventListener('load', function() {
 });
 </script>
 
+<div class="mo" id="lm">
+<div class="mb2">
+<div style="font-size:40px;margin-bottom:10px">🧠</div>
+<h2>Guideon</h2><p>Entrez le mot de passe</p>
+<div style="position:relative;width:100%;"><input type="password" id="pi" placeholder="Mot de passe..." onkeydown="if(event.key==='Enter')cp()" style="width:100%;padding-right:40px;box-sizing:border-box;"><button type="button" onclick="togglePwd('pi',this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#a78bfa;font-size:14px;">Voir</button></div>
+<div class="er" id="pe">Mot de passe incorrect</div>
+<button onclick="cp()">Entrer</button>
+<p style="text-align:center;margin-top:8px;"><a href="#" onclick="showForgot()" style="color:#a78bfa;font-size:13px;">Mot de passe oublié ?</a></p>
+</div></div>
+<header>
+<div class="logo">🧠</div>
+<div class="hi"><h1>Guideon</h1><p>Assistant sage et philosophique</p></div>
+<div class="hb">
+<div class="st"><div class="sd"></div><span>En ligne</span></div>
+<button class="ib" onclick="tvv()" id="vt">🔊</button>
+</div></header>
+<div class="pl">
+<button class="pb" onclick="up('/traduire ')">🌍 Traduire</button>
+<button class="pb" onclick="up('/resume ')">📝 Resumer</button>
+<button class="pb" onclick="up('/image ')">🎨 Image</button>
+<button class="pb" onclick="up('!web ')">🌐 Web</button>
+t			<button class="pb" onclick="regenerateResponse(this)" title="Régénérer">↻</button>
+<button class="pp" onclick="document.getElementById('pdfUploadInput').click();">📄 PDF</button><input type="file" id="pdfUploadInput" accept=".pdf" style="display:none;">
+<button class="pb" onclick="cc()">🗑️ Effacer</button>
+</div>
+<div id="chat">
+<div class="wl"><div class="big">🧠</div><h2>Bonjour ! Je suis votre assistant virtuel Guideon</h2><p>Que puis-je faire pour vous ?</p></div>
+</div>
+<div class="ia">
+<div id="app-footer" style="position:fixed;bottom:8px;right:12px;font-size:10px;color:#6b7280;z-index:100;pointer-events:none;">🧠 Guidéon peut faire des erreurs</div>
+<textarea id="ui" placeholder="Ecrivez votre message..." rows="1"></textarea>
+<button class="mb" id="mb" onclick="tm()">🎤</button>
+<button class="sb" onclick="sm()">➤</button>
+</div>
+<script>
+const PW="guideon2024";
+  const userId=localStorage.getItem("gid")||crypto.randomUUID();localStorage.setItem("gid",userId);
+let chatHistory=[],ve=false,rec=null,il=false;
+function cp(){const p=document.getElementById('pi').value;if(p===PW){document.getElementById('lm').classList.remove('show');}else{document.getElementById('pe').style.display='block';}}
+function tvv(){ve=!ve;document.getElementById('vt').textContent=ve?'🔊':'🔇';}
+function sp(t){if(!ve)return;const u=new SpeechSynthesisUtterance(t);u.lang='fr-FR';u.rate=0.9;speechSynthesis.speak(u);}function speak(btn){
+const bub=btn.closest('.mc').querySelector('.bub');
+if(speechSynthesis.speaking){
+speechSynthesis.cancel();
+document.querySelectorAll('.cb').forEach(b=>{if(b.textContent.indexOf('⏹️')>=0)b.textContent='🔊';});
+document.querySelectorAll('.tts-w').forEach(s=>s.classList.remove('tts-active'));
+return;
+}
+if(!bub.dataset.orig)bub.dataset.orig=bub.innerHTML;
+const text=bub.innerText;
+const words=[];const re2=/\S+/g;let mm;
+while((mm=re2.exec(text))!==null){words.push({w:mm[0],s:mm.index,e:mm.index+mm[0].length});}
+let html='';let last=0;
+words.forEach((w,i)=>{html+=text.slice(last,w.s).replace(/\n/g,'<br>');html+='<span class="tts-w" data-i="'+i+'">'+w.w+'</span>';last=w.e;});
+html+=text.slice(last).replace(/\n/g,'<br>');
+bub.innerHTML=html;
 const u=new SpeechSynthesisUtterance(text);
 u.lang='fr-FR';u.rate=0.9;
 
@@ -224,9 +261,8 @@ document.getElementById('ui').addEventListener('input',function(){this.style.hei
 <h2 style="color:#a78bfa;text-align:center;margin-bottom:6px;">🧠 Guidéon</h2>
 <p style="color:#6b7280;text-align:center;font-size:12px;margin-bottom:18px;">Ton assistant IA personnel</p>
 <div style="display:flex;gap:8px;margin-bottom:16px;">
-<button onclick="stab('login')" class="tab-button active" data-tab="connexion" id="tl" style="flex:1;padding:8px;background:#2d1b69;color:#fff;border:none;border-radius:8px;cursor:pointer;">Connexion</button>
-<button onclick="stab('reg')" class="tab-button" data-tab="inscription" id="tr" style="flex:1;padding:8px;background:transparent;color:#a78bfa;border:1px solid #a78bfa;border-radius:8px;cursor:pointer;">Inscription</button>
-<button class="tab-button" data-tab="reset-phase" onclick="window.location.href='/reset-password'" style="flex:1;padding:8px;background:transparent;color:#a78fba;border:1px solid #a78fba;border-radius:8px;cursor:pointer;">Réinitialisation</button>
+<button onclick="stab('login')" id="tl" style="flex:1;padding:8px;background:#2d1b69;color:#fff;border:none;border-radius:8px;cursor:pointer;">Connexion</button>
+<button onclick="stab('reg')" id="tr" style="flex:1;padding:8px;background:transparent;color:#a78bfa;border:1px solid #a78bfa;border-radius:8px;cursor:pointer;">Inscription</button>
 </div>
 <input id="an" placeholder="Votre nom" style="display:none;width:100%;padding:10px;background:#0f0f1a;color:#fff;border:1px solid #2d1b69;border-radius:8px;margin-bottom:8px;box-sizing:border-box;">
 <input id="ae" type="email" placeholder="Email" style="width:100%;padding:10px;background:#0f0f1a;color:#fff;border:1px solid #2d1b69;border-radius:8px;margin-bottom:8px;box-sizing:border-box;">
