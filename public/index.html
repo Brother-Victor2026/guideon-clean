@@ -264,7 +264,21 @@ document.getElementById('ui').addEventListener('input',function(){this.style.hei
 📍 Étapes 1/2
 </div>
 <script>
+// Fonction pour mettre à jour le message des étapes
+function updateStepsMessage() {
+    var moElement = document.querySelector('.mo.show');
+    var stepsMsg = document.getElementById('stepsMessage');
+    if(stepsMsg) {
+        if(moElement) {
+            stepsMsg.innerHTML = '📍 Étapes 1/2';
+        } else {
+            stepsMsg.innerHTML = '📍 Étapes 2/2<br>🔐 Reconnexion nécessaire<br>Entrez vos identifiants pour accéder à votre espace Guidéon';
+        }
+    }
+}
+
 // Observateur pour surveiller les changements
+updateStepsMessage();
 var observer = new MutationObserver(function(mutations) {
     var moElement = document.querySelector('.mo.show');
     var stepsMsg = document.getElementById('stepsMessage');
