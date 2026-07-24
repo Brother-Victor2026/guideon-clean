@@ -265,8 +265,8 @@ document.getElementById('ui').addEventListener('input',function(){this.style.hei
 </div>
 <script>
 setTimeout(function() {
-    var anElement = document.getElementById('an');
-    if(anElement && anElement.classList.contains('show')) {
+    var moElement = document.querySelector('.mo.show');
+    if(moElement) {
         document.getElementById('stepsMessage').innerHTML = '📍 Étapes 2/2<br>🔐 Reconnexion nécessaire<br>Entrez vos identifiants pour accéder à votre espace Guidéon';
     }
 }, 100);
