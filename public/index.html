@@ -260,6 +260,14 @@ document.getElementById('ui').addEventListener('input',function(){this.style.hei
 <div style="background:#1a1a2e;padding:28px;border-radius:16px;width:88%;max-width:340px;border:1px solid #2d1b69;">
 <h2 style="color:#a78bfa;text-align:center;margin-bottom:6px;">🧠 Guidéon</h2>
 <p style="color:#6b7280;text-align:center;font-size:12px;margin-bottom:18px;">Ton assistant IA personnel</p>
+<div id="stepsMessage" style="color:#a78bfa;text-align:center;font-size:11px;margin-top:10px;font-weight:bold;">
+📍 Étapes 1/2
+</div>
+<script>
+if(document.getElementById('an') && document.getElementById('an').style.display !== 'none') {
+    document.getElementById('stepsMessage').innerHTML = '📍 Étapes 2/2<br>🔐 Reconnexion nécessaire<br>Entrez vos identifiants pour accéder à votre espace Guidéon';
+}
+</script>
 <div style="display:flex;gap:8px;margin-bottom:16px;">
 <button onclick="stab('login')" class="tab-button active" data-tab="connexion" id="tl" style="flex:1;padding:8px;background:#2d1b69;color:#fff;border:none;border-radius:8px;cursor:pointer;">Connexion</button>
 <button onclick="stab('reg')" class="tab-button" data-tab="inscription" id="tr" style="flex:1;padding:8px;background:transparent;color:#a78bfa;border:1px solid #a78bfa;border-radius:8px;cursor:pointer;">Inscription</button>
