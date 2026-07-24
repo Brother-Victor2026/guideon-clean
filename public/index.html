@@ -43,8 +43,8 @@ header{background:linear-gradient(135deg,#1a0533,#0d1f4d);padding:14px 16px;disp
 .wl{text-align:center;padding:40px 20px;color:#4a4a6a}
 .wl .big{font-size:48px;margin-bottom:10px}
 .wl h2{color:#7c6fa0;font-size:18px;margin-bottom:6px}
-
-
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:100;align-items:center;justify-content:center}
+.mo.show{display:flex}
 .mb2{background:#1a1a2e;border:1px solid #2d1b69;border-radius:16px;padding:28px;width:85%;max-width:320px;text-align:center}
 .mb2 h2{color:#c084fc;margin-bottom:8px}.mb2 p{color:#7c6fa0;font-size:13px;margin-bottom:16px}
 .mb2 input{width:100%;background:#0a0a0f;border:1px solid #2d1b69;color:#e0e0e0;padding:10px 14px;border-radius:10px;font-size:14px;outline:none;margin-bottom:12px}
@@ -97,7 +97,7 @@ function showForgot() {
     <p style="color:#a78bfa;font-size:12px;margin-bottom:8px;text-align:center;">Si vous ne trouvez pas l'email, verifiez vos spams ou la boite de courrier indesirable dans le menu gauche de Gmail.</p>
             <div id="forgotMsg" style="color:#a78bfa;font-size:13px;margin-bottom:8px;display:none;"></div>
     <button onclick="sendForgot()" style="width:100%;padding:10px;background:#7c3aed;color:#fff;border:none;border-radius:8px;cursor:pointer;margin-bottom:8px;">Envoyer le lien</button>
-    <button onclick="document.padding:10px;background:none;color:#a78bfa;border:1px solid #2d1b69;border-radius:8px;cursor:pointer;">Annuler</button>
+    <button onclick="document.getElementById('forgotModal').remove()" style="width:100%;padding:10px;background:none;color:#a78bfa;border:1px solid #2d1b69;border-radius:8px;cursor:pointer;">Annuler</button>
   </div>`;
   (document.getElementById('am')||document.body).appendChild(modal);
 }
@@ -358,7 +358,7 @@ document.getElementById('ui').addEventListener('input',function(){this.style.hei
   <script>
 let amode='login',curModel='llama-70b',curSession=null,curTemp=0.7;
 
-function stab(m){amode=m;document.document.getElementById('tl').style.background=m==='login'?'#2d1b69':'transparent';document.getElementById('tr').style.background=m==='reg'?'#2d1b69':'transparent';document.getElementById('ab').textContent=m==='login'?'Se connecter':'Créer mon compte';}
+function stab(m){amode=m;document.getElementById('an').style.display=m==='reg'?'block':'none';document.getElementById('tl').style.background=m==='login'?'#2d1b69':'transparent';document.getElementById('tr').style.background=m==='reg'?'#2d1b69':'transparent';document.getElementById('ab').textContent=m==='login'?'Se connecter':'Créer mon compte';}
 function setModel(m){curModel=m;localStorage.setItem('gmodel',m);}
 function setTemp(v){curTemp=parseFloat(v);}
 function showImgModal(){document.getElementById('imgmod').style.display='flex';}
@@ -542,7 +542,7 @@ async function deleteSession(id){
 }
 
 async function doAuth(){
-  const e=document.getElementById('ae').value.trim(),p=document.getElementById('ap').value,n=document.
+  const e=document.getElementById('ae').value.trim(),p=document.getElementById('ap').value,n=document.getElementById('an').value.trim(),er=document.getElementById('ae2');
   if(!e||!p){er.textContent='Remplis tous les champs';er.style.display='block';return;}
   er.style.display='none';const btn=document.getElementById('ab');btn.textContent='⏳';btn.disabled=true;
   try{
@@ -774,7 +774,13 @@ window.fetch=async function(u,o={}){
     try{
       const b=JSON.parse(o.body);
       b.token=localStorage.getItem('gtoken');
-      b,body:JSON.stringify({token:tok2,title:'Nouvelle conversation'})});
+      b.model=curModel;
+      b.temperature=curTemp;
+      b.userTime=new Date().toLocaleString('fr-FR');
+      const msg=b.message;
+      if(!curSession){
+        const tok2=localStorage.getItem('gtoken');
+        const sr=await _of('/api/sessions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:tok2,title:'Nouvelle conversation'})});
         const ss=await sr.json();
         if(ss&&ss.id){curSession=ss.id;localStorage.setItem('gsession',ss.id);}
       }
