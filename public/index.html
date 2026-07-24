@@ -264,9 +264,12 @@ document.getElementById('ui').addEventListener('input',function(){this.style.hei
 📍 Étapes 1/2
 </div>
 <script>
-if(document.getElementById('an') && document.getElementById('an').style.display !== 'none') {
-    document.getElementById('stepsMessage').innerHTML = '📍 Étapes 2/2<br>🔐 Reconnexion nécessaire<br>Entrez vos identifiants pour accéder à votre espace Guidéon';
-}
+setTimeout(function() {
+    var anElement = document.getElementById('an');
+    if(anElement && anElement.classList.contains('show')) {
+        document.getElementById('stepsMessage').innerHTML = '📍 Étapes 2/2<br>🔐 Reconnexion nécessaire<br>Entrez vos identifiants pour accéder à votre espace Guidéon';
+    }
+}, 100);
 </script>
 <div style="display:flex;gap:8px;margin-bottom:16px;">
 <button onclick="stab('login')" class="tab-button active" data-tab="connexion" id="tl" style="flex:1;padding:8px;background:#2d1b69;color:#fff;border:none;border-radius:8px;cursor:pointer;">Connexion</button>
