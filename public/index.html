@@ -272,7 +272,7 @@ function updateStepsMessage() {
         if(moElement) {
             stepsMsg.innerHTML = '📍 Étapes 1/2';
         } else {
-            stepsMsg.innerHTML = '📍 Étapes 2/2<br>🔐 Reconnexion nécessaire<br>Entrez vos identifiants pour accéder à votre espace Guidéon';
+            stepsMsg.innerHTML = '🔐 Reconnexion nécessaire<br>Entrez vos identifiants pour accéder à votre espace Guidéon';
         }
     }
 }
@@ -284,7 +284,7 @@ var observer = new MutationObserver(function(mutations) {
     var stepsMsg = document.getElementById('stepsMessage');
     if(stepsMsg) {
         if(moElement) {
-            stepsMsg.innerHTML = '📍 Étapes 2/2<br>🔐 Reconnexion nécessaire<br>Entrez vos identifiants pour accéder à votre espace Guidéon';
+            stepsMsg.innerHTML = '🔐 Reconnexion nécessaire<br>Entrez vos identifiants pour accéder à votre espace Guidéon';
         } else {
             stepsMsg.innerHTML = '📍 Étapes 1/2';
         }
@@ -303,7 +303,7 @@ window.addEventListener('load', function() {
     var moElement = document.querySelector('.mo.show');
     var stepsMsg = document.getElementById('stepsMessage');
     if(stepsMsg && moElement) {
-        stepsMsg.innerHTML = '📍 Étapes 2/2<br>🔐 Reconnexion nécessaire<br>Entrez vos identifiants pour accéder à votre espace Guidéon';
+        stepsMsg.innerHTML = '🔐 Reconnexion nécessaire<br>Entrez vos identifiants pour accéder à votre espace Guidéon';
     }
 });
 </script>
