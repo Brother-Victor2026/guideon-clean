@@ -266,8 +266,8 @@ document.getElementById('ui').addEventListener('input',function(){this.style.hei
 <script>
 // Fonction pour mettre à jour le message des étapes
 function updateStepsMessage() {
-    var moElement = document.querySelector('.mo.show');
-    var stepsMsg = document.getElementById('stepsMessage');
+        console.log('DEBUG: updateStepsMessage appelée');
+        var moElement = document.querySelector('.mo.show');
     if(stepsMsg) {
         if(moElement) {
             stepsMsg.innerHTML = '📍 Étapes 1/2';
