@@ -261,8 +261,9 @@ document.getElementById('ui').addEventListener('input',function(){this.style.hei
 <h2 style="color:#a78bfa;text-align:center;margin-bottom:6px;">🧠 Guidéon</h2>
 <p style="color:#6b7280;text-align:center;font-size:12px;margin-bottom:18px;">Ton assistant IA personnel</p>
 <div style="display:flex;gap:8px;margin-bottom:16px;">
-<button onclick="stab('login')" id="tl" style="flex:1;padding:8px;background:#2d1b69;color:#fff;border:none;border-radius:8px;cursor:pointer;">Connexion</button>
-<button onclick="stab('reg')" id="tr" style="flex:1;padding:8px;background:transparent;color:#a78bfa;border:1px solid #a78bfa;border-radius:8px;cursor:pointer;">Inscription</button>
+<button onclick="stab('login')" class="tab-button active" data-tab="connexion" id="tl" style="flex:1;padding:8px;background:#2d1b69;color:#fff;border:none;border-radius:8px;cursor:pointer;">Connexion</button>
+<button onclick="stab('reg')" class="tab-button" data-tab="inscription" id="tr" style="flex:1;padding:8px;background:transparent;color:#a78bfa;border:1px solid #a78bfa;border-radius:8px;cursor:pointer;">Inscription</button>
+<button class="tab-button" data-tab="reset-phase" onclick="window.location.href='/reset-password'" style="flex:1;padding:8px;background:transparent;color:#a78fba;border:1px solid #a78fba;border-radius:8px;cursor:pointer;">Réinitialisation</button>
 </div>
 <input id="an" placeholder="Votre nom" style="display:none;width:100%;padding:10px;background:#0f0f1a;color:#fff;border:1px solid #2d1b69;border-radius:8px;margin-bottom:8px;box-sizing:border-box;">
 <input id="ae" type="email" placeholder="Email" style="width:100%;padding:10px;background:#0f0f1a;color:#fff;border:1px solid #2d1b69;border-radius:8px;margin-bottom:8px;box-sizing:border-box;">
