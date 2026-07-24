@@ -264,12 +264,34 @@ document.getElementById('ui').addEventListener('input',function(){this.style.hei
 📍 Étapes 1/2
 </div>
 <script>
-setTimeout(function() {
+// Observateur pour surveiller les changements
+var observer = new MutationObserver(function(mutations) {
     var moElement = document.querySelector('.mo.show');
-    if(moElement) {
-        document.getElementById('stepsMessage').innerHTML = '📍 Étapes 2/2<br>🔐 Reconnexion nécessaire<br>Entrez vos identifiants pour accéder à votre espace Guidéon';
+    var stepsMsg = document.getElementById('stepsMessage');
+    if(stepsMsg) {
+        if(moElement) {
+            stepsMsg.innerHTML = '📍 Étapes 2/2<br>🔐 Reconnexion nécessaire<br>Entrez vos identifiants pour accéder à votre espace Guidéon';
+        } else {
+            stepsMsg.innerHTML = '📍 Étapes 1/2';
+        }
     }
-}, 100);
+});
+
+// Écouter les changements de classes
+observer.observe(document.body, {
+    attributes: true,
+    attributeFilter: ['class'],
+    subtree: true
+});
+
+// Vérifier aussi au démarrage
+window.addEventListener('load', function() {
+    var moElement = document.querySelector('.mo.show');
+    var stepsMsg = document.getElementById('stepsMessage');
+    if(stepsMsg && moElement) {
+        stepsMsg.innerHTML = '📍 Étapes 2/2<br>🔐 Reconnexion nécessaire<br>Entrez vos identifiants pour accéder à votre espace Guidéon';
+    }
+});
 </script>
 <div style="display:flex;gap:8px;margin-bottom:16px;">
 <button onclick="stab('login')" class="tab-button active" data-tab="connexion" id="tl" style="flex:1;padding:8px;background:#2d1b69;color:#fff;border:none;border-radius:8px;cursor:pointer;">Connexion</button>
