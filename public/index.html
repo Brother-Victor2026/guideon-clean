@@ -515,6 +515,7 @@ async function newSession(){
         const data = await response.json();
         if(data.success && data.session) {
             localStorage.setItem('gsession', data.session.id);
+            location.reload();
             
         }
     } catch(e) {
