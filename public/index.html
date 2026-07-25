@@ -515,11 +515,11 @@ async function newSession(){
         const data = await response.json();
         if(data.success && data.session) {
             localStorage.setItem('gsession', data.session.id);
-            location.reload();
+            
         }
     } catch(e) {
         console.error('Error creating session:', e);
-        location.reload();
+        
     }
 }
 
@@ -601,7 +601,7 @@ async function doAuth(){
   }catch(err){er.textContent='Erreur de connexion';er.style.display='block';btn.textContent='Se connecter';btn.disabled=false;}
 }
 
-function logout(){if(!confirm('Se déconnecter ?'))return;localStorage.removeItem('gtoken');localStorage.removeItem('gname');localStorage.removeItem('gsession');location.reload();}
+function logout(){if(!confirm('Se déconnecter ?'))return;localStorage.removeItem('gtoken');localStorage.removeItem('gname');localStorage.removeItem('gsession');}
 
 function applyTheme(theme){
   localStorage.setItem('gtheme', theme);
@@ -667,13 +667,13 @@ async function viewMemory(){
 async function clearMem(){
   if(!confirm('Effacer toute ta mémoire ?'))return;
   await fetch('/api/memory',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:localStorage.getItem('gtoken')})});
-  alert('✅ Mémoire effacée!');location.reload();
+  alert('✅ Mémoire effacée!');
 }
 
 async function delAccount(){
   if(!confirm('Supprimer définitivement ton compte ?'))return;
   await fetch('/api/account',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:localStorage.getItem('gtoken')})});
-  localStorage.clear();location.reload();
+  localStorage.clear();
 }
 
 async function analyzeImg(){
