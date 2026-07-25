@@ -82,7 +82,8 @@ app.post('/api/register', async (req, res) => {
 
 app.post('/api/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+        const { token } = req.body;
+        if (!token) return res.status(401).json({ error: 'Token requis' });
     const r = await fetch(`${DB}/users?email=eq.${encodeURIComponent(email)}&password=eq.${hashPwd(password)}`, { headers: SB });
     const users = await r.json();
     if (!Array.isArray(users) || !users[0]) return res.status(401).json({ error: 'Identifiants incorrects' });
@@ -451,22 +452,23 @@ app.get('/api/sessions', async (req, res) => {
 
 app.post('/api/sessions', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { token } = req.body;
+        if (!token) return res.status(401).json({ error: 'Token requis' });
     
-    const checkR = await fetch(`${DB}/users?email=eq.${encodeURI(email)}`);
-    const userData = await checkR.json();
+    const user = checkToken(token);
     
-    if (!userData || userData.length === 0) {
+    
+    if (!user) {
       return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
     }
     
-    const user = userData[0];
-    if (hashPwd(password) !== user.password) {
+    
+    if (false) {
       return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
     }
     
-    const token = makeToken(user.id, email);
-    const r = await fetch(`${DB}/sessions`, { method: 'POST', headers: { ...SB, 'Prefer': 'return=representation' }, body: JSON.stringify({ user_id: String(user.id), title: title || 'Nouvelle conversation' }) });
+    const sessionId = crypto.randomUUID();
+    const r = await fetch(`${DB}/sessions`, { method: 'POST', headers: { ...SB, 'Prefer': 'return=representation' }, body: JSON.stringify({ id: sessionId, user_id: String(user.id), title: 'Nouvelle conversation' }) });
     const data = await r.json();
     res.json(data[0]);
   } catch(e) { res.status(500).json({ error: e.message }); }

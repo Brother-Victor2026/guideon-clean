@@ -508,23 +508,19 @@ async function searchHist(q){
   }catch(e){}
 }
 
+
 async function newSession(){
-  const tok=localStorage.getItem('gtoken');
-  if(!tok){document.getElementById('am').style.display='flex';return;}
-  try{
-    const r=await fetch('/api/sessions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:tokenLS,title:'Nouvelle conversation'})});
-    const s=await r.json();
-    if(!s||!s.id)return;
-    curSession=s.id;localStorage.setItem('gsession',s.id);
-    try{history=[];}catch(e){}
-    closeSidebar();
-    const hr=new Date().getHours();
-    const moment=hr<12?'matin':hr<18?'après-midi':'soir';
-    const salut=hr<12?'Bonjour':hr<18?'Bon après-midi':'Bonsoir';
-    const name=localStorage.getItem('gname')||'';
-    const chat=document.getElementById('chat');
-    if(chat)chat.innerHTML='<div class="wl"><div class="big">🧠</div><h2>'+salut+(name?' '+name:'')+'</h2><p>Comment puis-je vous aider ce '+moment+' ?</p></div>';addSug();
-  }catch(e){}
+    try {
+        const response = await fetch('/api/sessions', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({token: localStorage.getItem('token')})});
+        const data = await response.json();
+        if(data.success && data.session) {
+            localStorage.setItem('gsession', data.session.id);
+            location.reload();
+        }
+    } catch(e) {
+        console.error('Error creating session:', e);
+        location.reload();
+    }
 }
 
 async function switchSession(id){
