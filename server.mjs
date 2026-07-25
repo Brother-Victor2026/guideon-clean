@@ -479,7 +479,7 @@ app.post('/api/sessions', async (req, res) => {
     const sessionId = crypto.randomUUID();
     const r = await fetch(`${DB}/sessions`, { method: 'POST', headers: { ...SB, 'Prefer': 'return=representation' }, body: JSON.stringify({ id: sessionId, user_id: String(user.id), title: 'Nouvelle conversation' }) });
     const data = await r.json();
-    res.json(data[0]);
+    res.json({ success: true, session: { id: data[0].id } });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
