@@ -511,7 +511,7 @@ async function searchHist(q){
 
 async function newSession(){
     try {
-        const response = await fetch('/api/sessions', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({token: localStorage.getItem('token')})});
+        const response = await fetch('/api/sessions', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({token: localStorage.getItem('gtoken')})});
         const data = await response.json();
         if(data.success && data.session) {
             localStorage.setItem('gsession', data.session.id);
