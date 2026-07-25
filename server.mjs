@@ -327,7 +327,9 @@ app.post('/api/chat', async (req, res) => {
     reply = reply.replace(/\[GENERATE_IMAGE:\s*[\s\S]+?\]/g, '').replace(/^\s*true\s*$/m, '').trim();
 
     if (token && DB) {
-      const user = checkToken(token);
+      console.log('🔑 Token:', token);
+        const user = checkToken(token);
+        console.log('👤 User:', user);
       if (user) {
         const isFirst = dbHistory.length === 0;
         await fetch(`${DB}/conversations`, { method: 'POST', headers: { ...SB, 'Prefer': 'return=minimal' }, body: JSON.stringify([{ user_id: String(user.id), role: 'user', content: message, session_id, image_url: null }])});
@@ -408,7 +410,9 @@ app.post('/api/image', async (req, res) => {
     } catch (e) {}
     if (token && session_id && DB) {
       try {
+        console.log('🔑 Token:', token);
         const user = checkToken(token);
+        console.log('👤 User:', user);
         if (user) {
           await fetch(`${DB}/conversations`, { method: 'POST', headers: { ...SB, 'Prefer': 'return=minimal' }, body: JSON.stringify([
             { user_id: String(user.id), role: 'user', content: prompt, session_id, image_url: null },
@@ -442,7 +446,9 @@ app.post('/api/analyze', async (req, res) => {
 app.get('/api/sessions', async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
-    const user = checkToken(token);
+    console.log('🔑 Token:', token);
+        const user = checkToken(token);
+        console.log('👤 User:', user);
     if (!user) return res.status(401).json({ error: 'Non autorise' });
     const r = await fetch(`${DB}/sessions?user_id=eq.${String(user.id)}&order=created_at.desc`, { headers: SB });
     const data = await r.json();
@@ -451,11 +457,14 @@ app.get('/api/sessions', async (req, res) => {
 });
 
 app.post('/api/sessions', async (req, res) => {
+    console.log('📞 POST /api/sessions reçu');
   try {
     const { token } = req.body;
         if (!token) return res.status(401).json({ error: 'Token requis' });
     
-    const user = checkToken(token);
+    console.log('🔑 Token:', token);
+        const user = checkToken(token);
+        console.log('👤 User:', user);
     
     
     if (!user) {
@@ -477,7 +486,9 @@ app.post('/api/sessions', async (req, res) => {
 app.delete('/api/sessions/:id', async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
-    const user = checkToken(token);
+    console.log('🔑 Token:', token);
+        const user = checkToken(token);
+        console.log('👤 User:', user);
     if (!user) return res.status(401).json({ error: 'Non autorise' });
     await fetch(`${DB}/conversations?session_id=eq.${req.params.id}`, { method: 'DELETE', headers: SB });
     await fetch(`${DB}/sessions?id=eq.${req.params.id}&user_id=eq.${String(user.id)}`, { method: 'DELETE', headers: SB });
@@ -488,7 +499,9 @@ app.delete('/api/sessions/:id', async (req, res) => {
 app.patch('/api/sessions/:id', async (req, res) => {
   try {
     const { token, title } = req.body;
-    const user = checkToken(token);
+    console.log('🔑 Token:', token);
+        const user = checkToken(token);
+        console.log('👤 User:', user);
     if (!user) return res.status(401).json({ error: 'Non autorise' });
     await fetch(`${DB}/sessions?id=eq.${req.params.id}&user_id=eq.${String(user.id)}`, { method: 'PATCH', headers: { ...SB, 'Prefer': 'return=minimal' }, body: JSON.stringify({ title }) });
     res.json({ success: true });
@@ -498,7 +511,9 @@ app.patch('/api/sessions/:id', async (req, res) => {
 app.patch('/api/sessions/:id/pin', async (req, res) => {
   try {
     const { token, pinned } = req.body;
-    const user = checkToken(token);
+    console.log('🔑 Token:', token);
+        const user = checkToken(token);
+        console.log('👤 User:', user);
     if (!user) return res.status(401).json({ error: 'Non autorise' });
     await fetch(`${DB}/sessions?id=eq.${req.params.id}&user_id=eq.${String(user.id)}`, { method: 'PATCH', headers: { ...SB, 'Prefer': 'return=minimal' }, body: JSON.stringify({ pinned }) });
     res.json({ success: true });
@@ -508,7 +523,9 @@ app.patch('/api/sessions/:id/pin', async (req, res) => {
 app.get('/api/history/:sessionId', async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
-    const user = checkToken(token);
+    console.log('🔑 Token:', token);
+        const user = checkToken(token);
+        console.log('👤 User:', user);
     if (!user) return res.status(401).json({ error: 'Non autorise' });
     const r = await fetch(`${DB}/conversations?user_id=eq.${String(user.id)}&session_id=eq.${req.params.sessionId}&order=id.asc&limit=500`, { headers: SB });
     const data = await r.json();
@@ -519,7 +536,9 @@ app.get('/api/history/:sessionId', async (req, res) => {
 app.delete('/api/memory', async (req, res) => {
   try {
     const { token } = req.body;
-    const user = checkToken(token);
+    console.log('🔑 Token:', token);
+        const user = checkToken(token);
+        console.log('👤 User:', user);
     if (!user) return res.status(401).json({ error: 'Non autorise' });
     await fetch(`${DB}/conversations?user_id=eq.${String(user.id)}`, { method: 'DELETE', headers: SB });
     res.json({ success: true });
@@ -529,7 +548,9 @@ app.delete('/api/memory', async (req, res) => {
 app.get('/api/memory/view', async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
-    const user = checkToken(token);
+    console.log('🔑 Token:', token);
+        const user = checkToken(token);
+        console.log('👤 User:', user);
     if (!user) return res.status(401).json({ error: 'Non autorise' });
     const r = await fetch(`${DB}/users?id=eq.${user.id}&select=name,email,instructions,created_at`, { headers: SB });
     const data = await r.json();
@@ -540,7 +561,9 @@ app.get('/api/memory/view', async (req, res) => {
 app.put('/api/profile', async (req, res) => {
   try {
     const { token, name, password } = req.body;
-    const user = checkToken(token);
+    console.log('🔑 Token:', token);
+        const user = checkToken(token);
+        console.log('👤 User:', user);
     if (!user) return res.status(401).json({ error: 'Non autorise' });
     const updates = {};
     if (name) updates.name = name;
@@ -553,7 +576,9 @@ app.put('/api/profile', async (req, res) => {
 app.post('/api/instructions', async (req, res) => {
   try {
     const { token, instructions } = req.body;
-    const user = checkToken(token);
+    console.log('🔑 Token:', token);
+        const user = checkToken(token);
+        console.log('👤 User:', user);
     if (!user) return res.status(401).json({ error: 'Non autorise' });
     await fetch(`${DB}/users?id=eq.${user.id}`, { method: 'PATCH', headers: { ...SB, 'Prefer': 'return=minimal' }, body: JSON.stringify({ instructions }) });
     res.json({ success: true });
@@ -563,7 +588,9 @@ app.post('/api/instructions', async (req, res) => {
 app.delete('/api/account', async (req, res) => {
   try {
     const { token } = req.body;
-    const user = checkToken(token);
+    console.log('🔑 Token:', token);
+        const user = checkToken(token);
+        console.log('👤 User:', user);
     if (!user) return res.status(401).json({ error: 'Non autorise' });
     await fetch(`${DB}/conversations?user_id=eq.${String(user.id)}`, { method: 'DELETE', headers: SB });
     await fetch(`${DB}/sessions?user_id=eq.${String(user.id)}`, { method: 'DELETE', headers: SB });
@@ -575,7 +602,9 @@ app.delete('/api/account', async (req, res) => {
 app.get('/api/export/:sessionId', async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
-    const user = checkToken(token);
+    console.log('🔑 Token:', token);
+        const user = checkToken(token);
+        console.log('👤 User:', user);
     if (!user) return res.status(401).json({ error: 'Non autorise' });
     const r = await fetch(`${DB}/conversations?user_id=eq.${String(user.id)}&session_id=eq.${req.params.sessionId}&order=id.asc`, { headers: SB });
     const data = await r.json();
@@ -598,7 +627,9 @@ app.get('/api/share/:sessionId', async (req, res) => {
 app.get('/api/search/history', async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
-    const user = checkToken(token);
+    console.log('🔑 Token:', token);
+        const user = checkToken(token);
+        console.log('👤 User:', user);
     if (!user) return res.status(401).json({ error: 'Non autorise' });
     const q = req.query.q;
     const r = await fetch(`${DB}/conversations?user_id=eq.${String(user.id)}&content=ilike.*${encodeURIComponent(q)}*&order=pinned.desc,created_at.desc&limit=20`, { headers: SB });
@@ -610,7 +641,9 @@ app.get('/api/search/history', async (req, res) => {
 app.delete('/api/regenerate', async (req, res) => {
   try {
     const { token, session_id } = req.body;
-    const user = checkToken(token);
+    console.log('🔑 Token:', token);
+        const user = checkToken(token);
+        console.log('👤 User:', user);
     if (!user) return res.status(401).json({ error: 'Non autorise' });
     const r = await fetch(`${DB}/conversations?user_id=eq.${String(user.id)}&session_id=eq.${session_id}&order=pinned.desc,created_at.desc&limit=2`, { headers: SB });
     const data = await r.json();
@@ -645,7 +678,9 @@ app.get('/api/stats', async (req, res) => {
 app.post('/api/feedback', async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
-    const user = checkToken(token);
+    console.log('🔑 Token:', token);
+        const user = checkToken(token);
+        console.log('👤 User:', user);
     const { message, rating } = req.body;
     if (user && DB) {
       await fetch(`${DB}/feedback`, { method: 'POST', headers: { ...SB, 'Prefer': 'return=minimal' }, body: JSON.stringify({ user_id: String(user.id), message, rating }) });
