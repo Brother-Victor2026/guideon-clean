@@ -512,7 +512,7 @@ async function newSession(){
   const tok=localStorage.getItem('gtoken');
   if(!tok){document.getElementById('am').style.display='flex';return;}
   try{
-    const r=await fetch('/api/sessions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:tok,title:'Nouvelle conversation'})});
+    const r=await fetch('/api/sessions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:tokenLS,title:'Nouvelle conversation'})});
     const s=await r.json();
     if(!s||!s.id)return;
     curSession=s.id;localStorage.setItem('gsession',s.id);
@@ -827,7 +827,7 @@ window.fetch=async function(u,o={}){
       const msg=b.message;
       if(!curSession){
         const tok2=localStorage.getItem('gtoken');
-        const sr=await _of('/api/sessions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:tok2,title:'Nouvelle conversation'})});
+        const sr=await _of('/api/sessions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:tokenLS,title:'Nouvelle conversation'})});
         const ss=await sr.json();
         if(ss&&ss.id){curSession=ss.id;localStorage.setItem('gsession',ss.id);}
       }
