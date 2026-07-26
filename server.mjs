@@ -476,9 +476,11 @@ app.post('/api/sessions', async (req, res) => {
       return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
     }
     
-    const sessionId = crypto.randomUUID();
+    const sessionId = Date.now().toString();
     const r = await fetch(`${DB}/sessions`, { method: 'POST', headers: { ...SB, 'Prefer': 'return=representation' }, body: JSON.stringify({ id: sessionId, user_id: String(user.id), title: 'Nouvelle conversation' }) });
     const data = await r.json();
+    console.log('📊 Session créée:', data);
+    if (!data || !data[0]) return res.status(500).json({ error: 'Erreur création session' });
     res.json({ success: true, session: { id: data[0].id } });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
