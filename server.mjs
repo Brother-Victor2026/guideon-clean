@@ -82,8 +82,8 @@ app.post('/api/register', async (req, res) => {
 
 app.post('/api/login', async (req, res) => {
   try {
-        const { token } = req.body;
-        if (!token) return res.status(401).json({ error: 'Token requis' });
+        const { email, password } = req.body;
+        if (!email || !password) return res.status(401).json({ error: 'Email et mot de passe requis' });
     const r = await fetch(`${DB}/users?email=eq.${encodeURIComponent(email)}&password=eq.${hashPwd(password)}`, { headers: SB });
     const users = await r.json();
     if (!Array.isArray(users) || !users[0]) return res.status(401).json({ error: 'Identifiants incorrects' });
