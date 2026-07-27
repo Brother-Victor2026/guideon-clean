@@ -154,7 +154,6 @@ window.addEventListener('load', function() {
 <button class="pb" onclick="up('/resume ')">📝 Resumer</button>
 <button class="pb" onclick="up('/image ')">🎨 Image</button>
 <button class="pb" onclick="up('!web ')">🌐 Web</button>
-t			<button class="pb" onclick="regenerateResponse(this)" title="Régénérer">↻</button>
 <button class="pp" onclick="document.getElementById('pdfUploadInput').click();">📄 PDF</button><input type="file" id="pdfUploadInput" accept=".pdf" style="display:none;">
 <button class="pb" onclick="cc()">🗑️ Effacer</button>
 </div>
@@ -211,7 +210,57 @@ function tm(){if(!('webkitSpeechRecognition'in window||'SpeechRecognition'in win
 function up(p){const i=document.getElementById('ui');i.value=p;i.focus();}
 function cc(){chatHistory=[];document.getElementById('chat').innerHTML='<div class="wl"><div class="big">🧠</div><h2>Nouvelle conversation</h2><p>Que puis-je faire ?</p></div>';addSug();}
 function gt(ts=null){return (ts?new Date(ts):new Date()).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});}
-function am(role,content,img=null,ts=null){const chat=document.getElementById('chat');const wl=chat.querySelector('.wl');if(wl)wl.remove();const d=document.createElement('div');d.className='msg '+(role==='guideon'?'g':'user');const av=role==='guideon'?'🧠':'👤';const ac=role==='guideon'?'g':'u';const t=role==='guideon'?marked.parse(content||''):(content||'').replace(/\n/g,'<br>');const ih=img?'<br><img src="'+img+'" style="max-width:220px;border-radius:12px;margin-top:8px">':'';const ah=role==='guideon'?'<div class="ba"><button class="cb" onclick="(()=>{const ta=document.createElement(\'textarea\');ta.value=this.closest(\'.mc\').querySelector(\'.bub\').innerText;ta.style.position=\'fixed\';ta.style.top=\'-9999px\';document.body.appendChild(ta);ta.focus();ta.select();try{document.execCommand(\'copy\');}catch(e){};document.body.removeChild(ta);cBtn.textContent=\'✅\';setTimeout(()=>{cBtn.textContent=\'📋 Copier\';},2000);})()">Copier</button><button class="cb" onclick="fb(this,1)">👍</button><button class="cb" onclick="fb(this,-1)">👎</button><button class="cb" onclick="speak(this)">🔊</button><button class="cb" onclick="shareMsg(this)">Partager</button></div>':'';d.innerHTML='<div class="av '+ac+'">'+av+'</div><div class="mc"><div class="bub">'+t+ih+'</div>'+ah+'<div class="mt">'+gt(ts)+'</div></div>';if(content===''){const b=d.querySelector('.bub');if(b)b.dataset.fmt='1'}chat.appendChild(d);chat.scrollTop=chat.scrollHeight;const th=localStorage.getItem('gtheme');if(th==='light'&&role==='guideon'){d.style.background='#ffffff';d.style.color='#1e1b4b';d.style.border='1px solid #c4b5fd';}return d;}
+function am(role,content,img=null,ts=null){const chat=document.getElementById('chat');const wl=chat.querySelector('.wl');if(wl)wl.remove();const d=document.createElement('div');d.className='msg '+(role==='guideon'?'g':'user');const av=role==='guideon'?'🧠':'👤';const ac=role==='guideon'?'g':'u';const t=role==='guideon'?marked.parse(content||''):(content||'').replace(/\n/g,'<br>');const ih=img?'<br><img src="'+img+'" style="max-width:220px;border-radius:12px;margin-top:8px">':'';const ah=role==='guideon'?'<div class="ba"><button class="cb" onclick="(()=>{const ta=document.createElement(\'textarea\');ta.value=this.closest(\'.mc\').querySelector(\'.bub\').innerText;ta.style.position=\'fixed\';ta.style.top=\'-9999px\';document.body.appendChild(ta);ta.focus();ta.select();try{document.execCommand(\'copy\');}catch(e){};document.body.removeChild(ta);cBtn.textContent=\'✅\';setTimeout(()=>{cBtn.textContent=\'📋 Copier\';},2000);})()">Copier</button><button class="cb" onclick="fb(this,1)">👍</button><button class="cb" onclick="fb(this,-1)">👎</button><button class="cb" onclick="speak(this)">🔊</button><button class="cb" onclick="shareMsg(this)">Partager</button></div>':'';d.innerHTML='<div class="av '+ac+'">'+av+'</div><div class="mc"><div class="bub">'+t+ih+'</div>'+ah+'<div class="mt">'+gt(ts)+'</div></div>';if(content===''){const b=d.querySelector('.bub');if(b)b.dataset.fmt='1'}chat.appendChild(d);chat.scrollTop=chat.scrollHeight;const th=localStorage.getItem('gtheme');if(th==='light'&&role==='guideon'){d.style.background='#ffffff';d.style.color='#1e1b4b';d.style.border='1px solid #c4b5fd';}if(role==='guideon') updateRegenerateButton();return d;}
+
+function regenerateResponse(btn) {
+  const msg = btn.closest('.msg');
+  if (!msg) return;
+  console.log('🗑️ Suppression flèche - btn:', btn);
+  btn.remove();
+  console.log('✓ Flèche supprimée');
+  msg.remove();
+  const chat = document.getElementById('chat');
+  const ty = document.createElement('div');
+  ty.id = 'ty';
+  ty.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+  chat.appendChild(ty);
+  chat.scrollTop = chat.scrollHeight;
+  const tok = localStorage.getItem('gtoken');
+  fetch('/api/regenerate', {
+    method: 'DELETE',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({token: tok, session_id: curSession})
+  }).then(r => r.json())
+    .then(d => {
+      rty();
+      if(d.reply) am('guideon', d.reply);
+    })
+    .catch(e => {
+      rty();
+      console.error('Erreur régénération:', e);
+    });
+}
+
+function updateRegenerateButton() {
+  console.log('🔘 updateRegenerateButton() appelée');
+  document.querySelectorAll('.msg.g .ba').forEach(ba => {
+    const btn = ba.querySelector('[onclick*="regenerateResponse"]');
+    if(btn) btn.remove();
+  });
+  const lastGuideonMsg = Array.from(document.querySelectorAll('.msg.g')).pop();
+  if(lastGuideonMsg) {
+    const ba = lastGuideonMsg.querySelector('.ba');
+    if(ba) {
+      const btn = document.createElement('button');
+      btn.className = 'cb';
+      btn.textContent = '↻';
+      btn.onclick = () => { console.log('🔘 Flèche cliquée'); regenerateResponse(btn); };
+      ba.appendChild(btn);
+    }
+  }
+}
+
+
 function sty(){const chat=document.getElementById('chat');const d=document.createElement('div');d.className='msg g';d.id='ty';d.innerHTML='<div class="av g">🧠</div><div class="ty"><span></span><span></span><span></span></div>';chat.appendChild(d);chat.scrollTop=chat.scrollHeight;}
 function rty(){const t=document.getElementById('ty');if(t)t.remove();}
 function useSug(t){const ui=document.getElementById('ui');ui.value=t.replace(/&#39;/g,"'");ui.focus();ui.style.height='auto';ui.style.height=Math.min(ui.scrollHeight,120)+'px';}

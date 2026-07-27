@@ -641,16 +641,37 @@ app.get('/api/search/history', async (req, res) => {
 });
 
 app.delete('/api/regenerate', async (req, res) => {
+  console.log('🔄 DELETE /api/regenerate reçu - token:', req.body?.token?.substring(0,10)+'...');
   try {
     const { token, session_id } = req.body;
-    console.log('🔑 Token:', token);
-        const user = checkToken(token);
-        console.log('👤 User:', user);
+    const user = checkToken(token);
     if (!user) return res.status(401).json({ error: 'Non autorise' });
-    const r = await fetch(`${DB}/conversations?user_id=eq.${String(user.id)}&session_id=eq.${session_id}&order=pinned.desc,created_at.desc&limit=2`, { headers: SB });
+    const userId = String(user.id);
+    const r = await fetch(`${DB}/conversations?user_id=eq.${userId}&session_id=eq.${session_id}&order=pinned.desc,created_at.desc&limit=2`, { headers: SB });
     const data = await r.json();
     if (Array.isArray(data)) for (const msg of data) await fetch(`${DB}/conversations?id=eq.${msg.id}`, { method: 'DELETE', headers: SB });
-    res.json({ success: true });
+    const hRes = await fetch(`${DB}/conversations?user_id=eq.${userId}&session_id=eq.${session_id}&order=id.asc&limit=30`, { headers: SB });
+    const hist = await hRes.json();
+    console.log('📝 Historique chargé:', hist.length, 'messages');
+    if (!Array.isArray(hist) || hist.length < 1) return res.json({ reply: 'Aucun historique trouvé.' });
+    console.log('📋 Historique brut ordre:', hist.map((h,i) => i+': '+h.role).join(' | '));
+    const lastUserMsg = [...hist].reverse().find(m => m.role === 'user');
+    if (!lastUserMsg) return res.json({ reply: 'Pas de message utilisateur à régénérer.' });
+    console.log('👤 Dernier message user trouvé:', lastUserMsg.id, lastUserMsg.content.substring(0,30));
+    const messages = [{role:'system',content:SYSTEM.content},...hist.filter(h=>h&&h.role&&h.content).map(h=>({role:h.role,content:h.content}))];
+    console.log('📤 Messages envoyés à API ordre:', messages.map((m,i) => i+': '+m.role).join(' | '));
+    const geminiBody = JSON.stringify({model:"openai/gpt-oss-120b",messages,temperature:0.7,stream:false});
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{"Authorization":`Bearer ${API_KEY}`,"Content-Type":"application/json"},body:geminiBody});
+    console.log('🌐 Groq response status:', response.status, response.ok);
+    if (!response.ok) {
+      const err = await response.json();
+      console.error('❌ Groq error:', err);
+      return res.status(500).json({error:"Erreur API: "+JSON.stringify(err)});
+    }
+    const result = await response.json();
+    const reply = result.choices?.[0]?.message?.content || "Erreur génération";
+    console.log('✅ Réponse générée:', reply.substring(0,50)+'...');
+    res.json({ reply });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
