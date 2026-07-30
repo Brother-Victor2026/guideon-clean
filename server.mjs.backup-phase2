@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 import { Resend } from 'resend';
 import multer from 'multer';
+const resend = null; // Resend désactivé pour tests
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -61,10 +62,6 @@ const SYSTEM = { role: "system", content: "Tu es Guideon, un assistant IA intell
 app.use(express.json({ limit: '15mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-
-// Initialiser Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 app.post('/api/register', async (req, res) => {
   try {
     const { email, password, name } = req.body;
@@ -82,8 +79,7 @@ app.post('/api/register', async (req, res) => {
 
 app.post('/api/login', async (req, res) => {
   try {
-        const { email, password } = req.body;
-        if (!email || !password) return res.status(401).json({ error: 'Email et mot de passe requis' });
+    const { email, password } = req.body;
     const r = await fetch(`${DB}/users?email=eq.${encodeURIComponent(email)}&password=eq.${hashPwd(password)}`, { headers: SB });
     const users = await r.json();
     if (!Array.isArray(users) || !users[0]) return res.status(401).json({ error: 'Identifiants incorrects' });
@@ -207,7 +203,7 @@ app.post('/api/chat', async (req, res) => {
     const visualBoost = wantsVisual ? "\n\nIMPORTANT: la demande actuelle de l'utilisateur appelle "
       + "clairement un contenu visuel ou narratif. Tu DOIS terminer ta reponse par la balise "
       + "[GENERATE_IMAGE: description en anglais] decrivant ce qui a ete demande ou raconte." : '';
-    // Charger memories utilisateureturn
+    // Charger memories utilisateur
   let memoriesText = '';
   if (user && user.id) {
     try {
@@ -327,9 +323,7 @@ app.post('/api/chat', async (req, res) => {
     reply = reply.replace(/\[GENERATE_IMAGE:\s*[\s\S]+?\]/g, '').replace(/^\s*true\s*$/m, '').trim();
 
     if (token && DB) {
-      console.log('🔑 Token:', token);
-        const user = checkToken(token);
-        console.log('👤 User:', user);
+      const user = checkToken(token);
       if (user) {
         const isFirst = dbHistory.length === 0;
         await fetch(`${DB}/conversations`, { method: 'POST', headers: { ...SB, 'Prefer': 'return=minimal' }, body: JSON.stringify([{ user_id: String(user.id), role: 'user', content: message, session_id, image_url: null }])});
@@ -410,9 +404,7 @@ app.post('/api/image', async (req, res) => {
     } catch (e) {}
     if (token && session_id && DB) {
       try {
-        console.log('🔑 Token:', token);
         const user = checkToken(token);
-        console.log('👤 User:', user);
         if (user) {
           await fetch(`${DB}/conversations`, { method: 'POST', headers: { ...SB, 'Prefer': 'return=minimal' }, body: JSON.stringify([
             { user_id: String(user.id), role: 'user', content: prompt, session_id, image_url: null },
@@ -446,9 +438,7 @@ app.post('/api/analyze', async (req, res) => {
 app.get('/api/sessions', async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
-    console.log('🔑 Token:', token);
-        const user = checkToken(token);
-        console.log('👤 User:', user);
+    const user = checkToken(token);
     if (!user) return res.status(401).json({ error: 'Non autorise' });
     const r = await fetch(`${DB}/sessions?user_id=eq.${String(user.id)}&order=created_at.desc`, { headers: SB });
     const data = await r.json();
@@ -457,40 +447,32 @@ app.get('/api/sessions', async (req, res) => {
 });
 
 app.post('/api/sessions', async (req, res) => {
-    console.log('📞 POST /api/sessions reçu');
   try {
-    const { token } = req.body;
-        if (!token) return res.status(401).json({ error: 'Token requis' });
+    const { email, password } = req.body;
     
-    console.log('🔑 Token:', token);
-        const user = checkToken(token);
-        console.log('👤 User:', user);
+    const checkR = await fetch(`${DB}/users?email=eq.${encodeURI(email)}`);
+    const userData = await checkR.json();
     
-    
-    if (!user) {
+    if (!userData || userData.length === 0) {
       return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
     }
     
-    
-    if (false) {
+    const user = userData[0];
+    if (hashPwd(password) !== user.password) {
       return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
     }
     
-    const sessionId = Date.now().toString();
-    const r = await fetch(`${DB}/sessions`, { method: 'POST', headers: { ...SB, 'Prefer': 'return=representation' }, body: JSON.stringify({ id: sessionId, user_id: String(user.id), title: 'Nouvelle conversation' }) });
+    const token = makeToken(user.id, email);
+    const r = await fetch(`${DB}/sessions`, { method: 'POST', headers: { ...SB, 'Prefer': 'return=representation' }, body: JSON.stringify({ user_id: String(user.id), title: title || 'Nouvelle conversation' }) });
     const data = await r.json();
-    console.log('📊 Session créée:', data);
-    if (!data || !data[0]) return res.status(500).json({ error: 'Erreur création session' });
-    res.json({ success: true, session: { id: data[0].id } });
+    res.json(data[0]);
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 app.delete('/api/sessions/:id', async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
-    console.log('🔑 Token:', token);
-        const user = checkToken(token);
-        console.log('👤 User:', user);
+    const user = checkToken(token);
     if (!user) return res.status(401).json({ error: 'Non autorise' });
     await fetch(`${DB}/conversations?session_id=eq.${req.params.id}`, { method: 'DELETE', headers: SB });
     await fetch(`${DB}/sessions?id=eq.${req.params.id}&user_id=eq.${String(user.id)}`, { method: 'DELETE', headers: SB });
@@ -501,9 +483,7 @@ app.delete('/api/sessions/:id', async (req, res) => {
 app.patch('/api/sessions/:id', async (req, res) => {
   try {
     const { token, title } = req.body;
-    console.log('🔑 Token:', token);
-        const user = checkToken(token);
-        console.log('👤 User:', user);
+    const user = checkToken(token);
     if (!user) return res.status(401).json({ error: 'Non autorise' });
     await fetch(`${DB}/sessions?id=eq.${req.params.id}&user_id=eq.${String(user.id)}`, { method: 'PATCH', headers: { ...SB, 'Prefer': 'return=minimal' }, body: JSON.stringify({ title }) });
     res.json({ success: true });
@@ -513,9 +493,7 @@ app.patch('/api/sessions/:id', async (req, res) => {
 app.patch('/api/sessions/:id/pin', async (req, res) => {
   try {
     const { token, pinned } = req.body;
-    console.log('🔑 Token:', token);
-        const user = checkToken(token);
-        console.log('👤 User:', user);
+    const user = checkToken(token);
     if (!user) return res.status(401).json({ error: 'Non autorise' });
     await fetch(`${DB}/sessions?id=eq.${req.params.id}&user_id=eq.${String(user.id)}`, { method: 'PATCH', headers: { ...SB, 'Prefer': 'return=minimal' }, body: JSON.stringify({ pinned }) });
     res.json({ success: true });
@@ -525,9 +503,7 @@ app.patch('/api/sessions/:id/pin', async (req, res) => {
 app.get('/api/history/:sessionId', async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
-    console.log('🔑 Token:', token);
-        const user = checkToken(token);
-        console.log('👤 User:', user);
+    const user = checkToken(token);
     if (!user) return res.status(401).json({ error: 'Non autorise' });
     const r = await fetch(`${DB}/conversations?user_id=eq.${String(user.id)}&session_id=eq.${req.params.sessionId}&order=id.asc&limit=500`, { headers: SB });
     const data = await r.json();
@@ -538,9 +514,7 @@ app.get('/api/history/:sessionId', async (req, res) => {
 app.delete('/api/memory', async (req, res) => {
   try {
     const { token } = req.body;
-    console.log('🔑 Token:', token);
-        const user = checkToken(token);
-        console.log('👤 User:', user);
+    const user = checkToken(token);
     if (!user) return res.status(401).json({ error: 'Non autorise' });
     await fetch(`${DB}/conversations?user_id=eq.${String(user.id)}`, { method: 'DELETE', headers: SB });
     res.json({ success: true });
@@ -550,9 +524,7 @@ app.delete('/api/memory', async (req, res) => {
 app.get('/api/memory/view', async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
-    console.log('🔑 Token:', token);
-        const user = checkToken(token);
-        console.log('👤 User:', user);
+    const user = checkToken(token);
     if (!user) return res.status(401).json({ error: 'Non autorise' });
     const r = await fetch(`${DB}/users?id=eq.${user.id}&select=name,email,instructions,created_at`, { headers: SB });
     const data = await r.json();
@@ -563,9 +535,7 @@ app.get('/api/memory/view', async (req, res) => {
 app.put('/api/profile', async (req, res) => {
   try {
     const { token, name, password } = req.body;
-    console.log('🔑 Token:', token);
-        const user = checkToken(token);
-        console.log('👤 User:', user);
+    const user = checkToken(token);
     if (!user) return res.status(401).json({ error: 'Non autorise' });
     const updates = {};
     if (name) updates.name = name;
@@ -578,9 +548,7 @@ app.put('/api/profile', async (req, res) => {
 app.post('/api/instructions', async (req, res) => {
   try {
     const { token, instructions } = req.body;
-    console.log('🔑 Token:', token);
-        const user = checkToken(token);
-        console.log('👤 User:', user);
+    const user = checkToken(token);
     if (!user) return res.status(401).json({ error: 'Non autorise' });
     await fetch(`${DB}/users?id=eq.${user.id}`, { method: 'PATCH', headers: { ...SB, 'Prefer': 'return=minimal' }, body: JSON.stringify({ instructions }) });
     res.json({ success: true });
@@ -590,9 +558,7 @@ app.post('/api/instructions', async (req, res) => {
 app.delete('/api/account', async (req, res) => {
   try {
     const { token } = req.body;
-    console.log('🔑 Token:', token);
-        const user = checkToken(token);
-        console.log('👤 User:', user);
+    const user = checkToken(token);
     if (!user) return res.status(401).json({ error: 'Non autorise' });
     await fetch(`${DB}/conversations?user_id=eq.${String(user.id)}`, { method: 'DELETE', headers: SB });
     await fetch(`${DB}/sessions?user_id=eq.${String(user.id)}`, { method: 'DELETE', headers: SB });
@@ -604,9 +570,7 @@ app.delete('/api/account', async (req, res) => {
 app.get('/api/export/:sessionId', async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
-    console.log('🔑 Token:', token);
-        const user = checkToken(token);
-        console.log('👤 User:', user);
+    const user = checkToken(token);
     if (!user) return res.status(401).json({ error: 'Non autorise' });
     const r = await fetch(`${DB}/conversations?user_id=eq.${String(user.id)}&session_id=eq.${req.params.sessionId}&order=id.asc`, { headers: SB });
     const data = await r.json();
@@ -629,9 +593,7 @@ app.get('/api/share/:sessionId', async (req, res) => {
 app.get('/api/search/history', async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
-    console.log('🔑 Token:', token);
-        const user = checkToken(token);
-        console.log('👤 User:', user);
+    const user = checkToken(token);
     if (!user) return res.status(401).json({ error: 'Non autorise' });
     const q = req.query.q;
     const r = await fetch(`${DB}/conversations?user_id=eq.${String(user.id)}&content=ilike.*${encodeURIComponent(q)}*&order=pinned.desc,created_at.desc&limit=20`, { headers: SB });
@@ -643,9 +605,7 @@ app.get('/api/search/history', async (req, res) => {
 app.delete('/api/regenerate', async (req, res) => {
   try {
     const { token, session_id } = req.body;
-    console.log('🔑 Token:', token);
-        const user = checkToken(token);
-        console.log('👤 User:', user);
+    const user = checkToken(token);
     if (!user) return res.status(401).json({ error: 'Non autorise' });
     const r = await fetch(`${DB}/conversations?user_id=eq.${String(user.id)}&session_id=eq.${session_id}&order=pinned.desc,created_at.desc&limit=2`, { headers: SB });
     const data = await r.json();
@@ -680,9 +640,7 @@ app.get('/api/stats', async (req, res) => {
 app.post('/api/feedback', async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
-    console.log('🔑 Token:', token);
-        const user = checkToken(token);
-        console.log('👤 User:', user);
+    const user = checkToken(token);
     const { message, rating } = req.body;
     if (user && DB) {
       await fetch(`${DB}/feedback`, { method: 'POST', headers: { ...SB, 'Prefer': 'return=minimal' }, body: JSON.stringify({ user_id: String(user.id), message, rating }) });
@@ -723,96 +681,73 @@ app.post('/api/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: 'Email requis' });
-    const token = Math.floor(100000 + Math.random() * 900000).toString();
     const r = await fetch(`${DB}/users?email=eq.${encodeURIComponent(email)}`, { headers: SB });
     const users = await r.json();
-    if (!Array.isArray(users) || !users[0]) return res.json({ message: 'Si cet email existe, un code a été généré', reset_code: token });  // Code 6 chiffres
+    if (!Array.isArray(users) || !users[0]) return res.json({ message: 'Si cet email existe, un lien a été envoyé' });
+    const token = crypto.randomBytes(32).toString('hex');
     const expires = new Date(Date.now() + 3600000).toISOString();
     await fetch(`${DB}/users?email=eq.${encodeURIComponent(email)}`, { method: 'PATCH', headers: { ...SB, 'Content-Type': 'application/json' }, body: JSON.stringify({ reset_token: token, reset_expires: expires }) });
     const resetUrl = `${process.env.APP_URL || 'https://guideon-8h4m.onrender.com'}/reset-password?token=${token}`;
     // En mode test, on ne peut pas envoyer d'email (resend = null)
-    // Retourner le token directement pour testereturn
-                // Envoyer l'email avec Resend
-                try {
-                  await resend.emails.send({
-                    from: 'Guidéon <codjovictorbossou@gmail.com>',
-                    to: email,
-                    subject: 'Réinitialisation de votre mot de passe - Guidéon',
-                    html: `<h2>Réinitialisation</h2><p><a href="${resetUrl}">Réinitialiser mon mot de passe</a></p><p>Lien expire dans 1 heure.</p>`
-                  });
-                  console.log('✓ Email envoyé à:', email);
-                } catch (err) {
-                  console.error('✗ Erreur email:', err.message);
-                }
-    res.json({ message: 'Si cet email existe, un code a été généré', reset_code: token });
+    // Retourner le token directement pour tester
+    console.log('Mode test - Reset token:', reset_token);
+    res.json({ message: 'Si cet email existe, un lien a été envoyé' });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 app.get('/reset-password', (req, res) => {
   const token = req.query.token || '';
-  const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Guidéon</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI';background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}.modal-container{background:#0f3460;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.3);max-width:450px;width:100%;overflow:hidden}.modal-header{text-align:center;padding:30px 20px 20px;background:linear-gradient(135deg,#533483 0%,#16213e 100%)}.modal-logo{font-size:24px;margin-bottom:5px}.modal-title{color:#a78bfa;font-size:28px;font-weight:700;margin-bottom:5px}.modal-subtitle{color:#9ca3af;font-size:13px}.tabs-container{display:flex;gap:0;padding:0 20px;margin-top:20px;border-bottom:1px solid #374151}.tab-button{flex:1;padding:12px 10px;background:0;border:0;color:#9ca3af;font-size:13px;cursor:pointer;font-weight:500;transition:all .3s ease;border-bottom:2px solid transparent;margin-bottom:-1px}.tab-button.active{color:#a78bfa;border-bottom-color:#a78bfa}.tab-button:hover{color:#c4b5fd}.modal-content{padding:30px 20px;min-height:400px}.tab-pane{display:none}.tab-pane.active{display:block}.form-group{margin-bottom:20px}.form-label{display:block;color:#d1d5db;font-size:13px;margin-bottom:8px;font-weight:500}.form-input{width:100%;padding:12px 14px;background:#1f2937;border:1px solid #374151;border-radius:8px;color:#f3f4f6;font-size:14px;transition:all .3s ease}.form-input:focus{outline:0;border-color:#a78bfa;background:#111827;box-shadow:0 0 0 3px rgba(167,139,250,.1)}.password-group{position:relative}.toggle-password{position:absolute;right:12px;top:38px;background:0;border:0;color:#a78bfa;cursor:pointer;font-size:16px;padding:5px}.toggle-password:hover{color:#c4b5fd}.form-message{color:#ef4444;font-size:12px;margin-top:6px;display:none}.form-message.show{display:block}.form-message.success{color:#10b981}.form-link{color:#a78bfa;text-decoration:0;font-size:13px;cursor:pointer}.form-link:hover{color:#c4b5fd;text-decoration:underline}.forgot-password-link{text-align:center;margin-top:15px}.button-group{display:flex;gap:12px;margin-top:25px}.btn{flex:1;padding:12px 16px;border:0;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all .3s ease}.btn-primary{background:linear-gradient(135deg,#a78bfa 0%,#7c3aed 100%);color:#fff}.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(167,139,250,.3)}.btn-secondary{background:#374151;color:#e5e7eb;flex:.8}.btn-secondary:hover{background:#4b5563}.code-display{background:#1f2937;border:2px solid #a78bfa;border-radius:8px;padding:16px;margin:20px 0;text-align:center}.code-label{color:#9ca3af;font-size:12px;margin-bottom:8px}.code-value{color:#a78bfa;font-size:32px;font-weight:700;font-family:'Courier New';letter-spacing:4px}.info-message{background:rgba(167,139,250,.1);border-left:3px solid #a78bfa;color:#d1d5db;padding:12px 14px;border-radius:4px;font-size:13px;margin-bottom:20px}.reset-phase-b{display:none}.reset-phase-b.show{display:block}.reset-phase-a.hide{display:none}</style></head><body><div class="modal-container"><div class="modal-header"><div class="modal-logo">🧠</div><div class="modal-title">Guidéon</div><div class="modal-subtitle">Ton assistant IA personnel</div><div class="tabs-container"><button class="tab-button active" data-tab="connexion">Connexion</button><button class="tab-button" data-tab="inscription">Inscription</button><button class="tab-button" data-tab="reset">Réinitialisation</button></div></div><div class="modal-content"><div class="tab-pane active" id="connexion"><form id="loginForm"><div class="form-group"><label class="form-label">Email</label><input type="email" id="loginEmail" class="form-input" placeholder="votre@email.com" required><div class="form-message" id="loginEmailMsg"></div></div><div class="form-group"><label class="form-label">Mot de passe</label><div class="password-group"><input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required><button type="button" class="toggle-password" onclick="togglePassword('loginPassword')">👁️</button></div><div class="form-message" id="loginPasswordMsg"></div></div><div class="forgot-password-link"><a class="form-link" onclick="switchTab('reset')">Mot de passe oublié ?</a></div><div class="button-group"><button type="submit" class="btn btn-primary">Se connecter</button></div><div style="text-align:center;margin-top:20px;color:#9ca3af;font-size:13px">Pas encore de compte ? <a class="form-link" onclick="switchTab('inscription')">S'inscrire</a></div><div class="form-message" id="loginMsg"></div></form></div><div class="tab-pane" id="inscription"><form id="registerForm"><div class="form-group"><label class="form-label">Votre nom</label><input type="text" id="registerName" class="form-input" placeholder="Votre nom" required><div class="form-message" id="registerNameMsg"></div></div><div class="form-group"><label class="form-label">Email</label><input type="email" id="registerEmail" class="form-input" placeholder="votre@email.com" required><div class="form-message" id="registerEmailMsg"></div></div><div class="form-group"><label class="form-label">Mot de passe</label><div class="password-group"><input type="password" id="registerPassword" class="form-input" placeholder="••••••••" required><button type="button" class="toggle-password" onclick="togglePassword('registerPassword')">👁️</button></div><div class="form-message" id="registerPasswordMsg"></div></div><div class="form-group"><label class="form-label">Confirmer mot de passe</label><div class="password-group"><input type="password" id="registerConfirm" class="form-input" placeholder="••••••••" required><button type="button" class="toggle-password" onclick="togglePassword('registerConfirm')">👁️</button></div><div class="form-message" id="registerConfirmMsg"></div></div><div class="button-group"><button type="submit" class="btn btn-primary">Créer mon compte</button></div><div style="text-align:center;margin-top:20px;color:#9ca3af;font-size:13px">Déjà inscrit ? <a class="form-link" onclick="switchTab('connexion')">Se connecter</a></div><div class="form-message" id="registerMsg"></div></form></div><div class="tab-pane" id="reset"><div class="reset-phase-a" id="resetPhaseA"><form id="forgotForm"><div class="form-group"><label class="form-label">Email</label><input type="email" id="forgotEmail" class="form-input" placeholder="votre@email.com" required><div class="form-message" id="forgotEmailMsg"></div></div><div class="button-group"><button type="submit" class="btn btn-primary">Générer code</button></div><div class="form-message" id="forgotMsg"></div></form></div><div class="reset-phase-b" id="resetPhaseB"><div class="info-message">✅ Un code a été généré. Utilisez-le ci-dessous pour réinitialiser votre mot de passe.</div><div class="code-display"><div class="code-label">Code de réinitialisation</div><div class="code-value" id="resetCodeDisplay">000000</div></div><form id="resetPasswordForm"><div class="form-group"><label class="form-label">Code</label><input type="text" id="resetCode" class="form-input" placeholder="Collez le code" required><div class="form-message" id="resetCodeMsg"></div></div><div class="form-group"><label class="form-label">Nouveau mot de passe</label><div class="password-group"><input type="password" id="resetPassword" class="form-input" placeholder="••••••••" required><button type="button" class="toggle-password" onclick="togglePassword('resetPassword')">👁️</button></div><div class="form-message" id="resetPasswordMsg"></div></div><div class="form-group"><label class="form-label">Confirmer mot de passe</label><div class="password-group"><input type="password" id="resetConfirm" class="form-input" placeholder="••••••••" required><button type="button" class="toggle-password" onclick="togglePassword('resetConfirm')">👁️</button></div><div class="form-message" id="resetConfirmMsg"></div></div><div class="button-group"><button type="submit" class="btn btn-primary">Réinitialiser</button><button type="button" class="btn btn-secondary" onclick="resetToPhaseA()">Retour</button></div><div class="form-message" id="resetPasswordFormMsg"></div></form></div></div></div></div><script>const API_URL=window.location.origin;let generatedCode=null;function togglePassword(e){document.getElementById(e).type='password'===document.getElementById(e).type?'text':'password'}function switchTab(e){document.querySelectorAll('.tab-pane').forEach(e=>e.classList.remove('active')),document.querySelectorAll('.tab-button').forEach(e=>e.classList.remove('active')),document.getElementById(e).classList.add('active'),document.querySelector('[data-tab="'+e+'"]').classList.add('active'),'reset'===e&&resetToPhaseA()}function clearMessage(e){const t=document.getElementById(e);t.classList.remove('show','success'),t.textContent=''}function showMessage(e,t,o=!1){const s=document.getElementById(e);s.textContent=t,s.classList.add('show'),o&&s.classList.add('success')}document.querySelectorAll('.tab-button').forEach(e=>{e.addEventListener('click',()=>{switchTab(e.dataset.tab)})}),document.getElementById('loginForm').addEventListener('submit',async e=>{e.preventDefault(),clearMessage('loginMsg');const t=document.getElementById('loginEmail').value,o=document.getElementById('loginPassword').value;try{const e=await fetch(API_URL+'/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:t,password:o})}),s=await e.json();e.ok?(showMessage('loginMsg','✅ Connexion réussie!',!0),localStorage.setItem('token',s.token),setTimeout(()=>window.location.href='/',1500)):showMessage('loginMsg',s.error||'Identifiants invalides')}catch(e){showMessage('loginMsg','Erreur serveur')}}),document.getElementById('registerForm').addEventListener('submit',async e=>{e.preventDefault(),clearMessage('registerMsg');const t=document.getElementById('registerName').value,o=document.getElementById('registerEmail').value,s=document.getElementById('registerPassword').value;if(document.getElementById('registerConfirm').value!==s)return void showMessage('registerConfirmMsg','Les mots de passe ne correspondent pas');if(s.length<6)return void showMessage('registerPasswordMsg','Le mot de passe doit contenir au moins 6 caractères');try{const e=await fetch(API_URL+'/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:o,password:s,name:t})}),a=await e.json();e.ok?(showMessage('registerMsg','✅ Compte créé! Connexion...',!0),localStorage.setItem('token',a.token),setTimeout(()=>window.location.href='/',1500)):showMessage('registerMsg',a.error||'Erreur inscription')}catch(e){showMessage('registerMsg','Erreur serveur')}}),document.getElementById('forgotForm').addEventListener('submit',async e=>{e.preventDefault(),clearMessage('forgotMsg');const t=document.getElementById('forgotEmail').value;try{const o=await fetch(API_URL+'/api/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:t})}),s=await o.json();o.ok?(generatedCode=s.reset_code,document.getElementById('resetCodeDisplay').textContent=generatedCode,document.getElementById('resetCode').value=generatedCode,document.getElementById('resetPhaseA').classList.add('hide'),document.getElementById('resetPhaseB').classList.add('show')):showMessage('forgotMsg',s.error||'Email non trouvé')}catch(e){showMessage('forgotMsg','Erreur serveur')}}),document.getElementById('resetPasswordForm').addEventListener('submit',async e=>{e.preventDefault(),clearMessage('resetPasswordFormMsg');const t=document.getElementById('resetCode').value,o=document.getElementById('resetPassword').value;if(document.getElementById('resetConfirm').value!==o)return void showMessage('resetConfirmMsg','Les mots de passe ne correspondent pas');if(o.length<6)return void showMessage('resetPasswordMsg','Le mot de passe doit contenir au moins 6 caractères');try{const s=await fetch(API_URL+'/api/reset-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t,password:o})}),a=await s.json();s.ok?(showMessage('resetPasswordFormMsg','✅ Mot de passe réinitialisé! Redirection...',!0),setTimeout(()=>switchTab('connexion'),1500)):showMessage('resetPasswordFormMsg',a.error||'Code invalide')}catch(e){showMessage('resetPasswordFormMsg','Erreur serveur')}}),function resetToPhaseA(){document.getElementById('resetPhaseA').classList.remove('hide'),document.getElementById('resetPhaseB').classList.remove('show'),document.getElementById('forgotForm').reset(),document.getElementById('resetPasswordForm').reset(),clearMessage('forgotMsg'),clearMessage('resetPasswordFormMsg'),generatedCode=null}()</script></body>
-    <script>
-    function rpwd() {
-      const c = document.getElementById('rc').value.trim();
-      const p = document.getElementById('np').value;
-      const pc = document.getElementById('cp').value;
-      const em = document.getElementById('em');
-      if (!c || !p) {
-        em.textContent = 'Token et mot de passe requis';
-        em.style.display = 'block';
-        return;
-      }
-      if (p !== pc) {
-        em.textContent = 'Les mots de passe ne correspondent pas';
-        em.style.display = 'block';
-        return;
-      }
-      fetch('/api/reset-password', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({code: c, password: p})
-      }).then(r => r.json()).then(d => {
-        if (d.error) {
-          em.textContent = d.error;
-          em.style.display = 'block';
-        } else {
-          em.textContent = 'Mot de passe réinitialisé!';
-          em.style.color = '#10b981';
-          em.style.display = 'block';
-          setTimeout(() => window.location.href = '/', 2000);
-        }
-      }).catch(err => {
-        em.textContent = 'Erreur réseau';
-        em.style.display = 'block';
-      });
-    }
-    </script>
-
-</html>`;
+  const html = [
+    '<!DOCTYPE html><html lang="fr"><head>',
+    '<meta charset="UTF-8">',
+    '<meta name="viewport" content="width=device-width,initial-scale=1">',
+    '<title>Reinitialisation - Guideon</title>',
+    '<style>',
+    '*{box-sizing:border-box;margin:0;padding:0}',
+    'body{background:#0f0f1a;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif}',
+    '.card{background:#1a1a2e;border-radius:16px;padding:32px;width:90%;max-width:400px}',
+    'h2{color:#a78bfa;margin-bottom:20px;text-align:center}',
+    'input{width:100%;padding:12px;background:#0f0f1a;border:1px solid #2d1b69;border-radius:8px;color:#fff;font-size:14px;margin-bottom:12px}',
+    'button{width:100%;padding:12px;background:linear-gradient(135deg,#7c3aed,#2563eb);color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer}',
+    '#msg{color:#a78bfa;font-size:13px;margin-top:10px;text-align:center}',
+    '</style></head><body>',
+    '<div class="card">',
+    '<h2>Nouveau mot de passe</h2>',
+    '<input type="password" id="np" placeholder="Nouveau mot de passe">',
+    '<input type="password" id="cp" placeholder="Confirmer le mot de passe">',
+    '<button onclick="go()">Enregistrer</button>',
+    '<button onclick="window.location.href=\'/\'">Annuler</button>',
+    '<div id="msg"></div>',
+    '</div>',
+    '<script>',
+    'var tok="' + token + '";',
+    'async function go(){',
+    'var np=document.getElementById("np").value;',
+    'var cp=document.getElementById("cp").value;',
+    'var msg=document.getElementById("msg");',
+    'if(!np||np.length<6){msg.textContent="Minimum 6 caracteres.";return}',
+    'if(np!==cp){msg.textContent="Les mots de passe ne correspondent pas.";return}',
+    'var r=await fetch("/api/reset-password",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:tok,password:np})});',
+    'var d=await r.json();',
+    'if(r.ok){msg.textContent="Mot de passe mis a jour. Redirection...";setTimeout(()=>window.location.href="/",2000);}',
+    'else{msg.textContent=d.error||"Erreur.";}',
+    '}',
+    '<\/script>',
+    '</body></html>'
+  ].join('');
   res.send(html);
 });
 
 app.post('/api/reset-password', async (req, res) => {
   try {
-    const { code, password } = req.body;
-    if (!code || !password) return res.status(400).json({ error: 'Token et mot de passe requis' });
-    const r = await fetch(`${DB}/users?reset_token=eq.${code}`, { headers: SB });
+    const { token, password } = req.body;
+    if (!token || !password) return res.status(400).json({ error: 'Token et mot de passe requis' });
+    const r = await fetch(`${DB}/users?reset_token=eq.${token}`, { headers: SB });
     const users = await r.json();
     if (!Array.isArray(users) || !users[0]) return res.status(400).json({ error: 'Token invalide' });
     if (new Date(users[0].reset_expires) < new Date()) return res.status(400).json({ error: 'Token expiré' });
-    await fetch(`${DB}/users?reset_token=eq.${code}`, { method: 'PATCH', headers: { ...SB, 'Content-Type': 'application/json' }, body: JSON.stringify({ password: hashPwd(password), reset_token: null, reset_expires: null }) });
+    await fetch(`${DB}/users?reset_token=eq.${token}`, { method: 'PATCH', headers: { ...SB, 'Content-Type': 'application/json' }, body: JSON.stringify({ password: hashPwd(password), reset_token: null, reset_expires: null }) });
     res.json({ message: 'Mot de passe mis à jour' });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
-
-app.post('/api/sessions/logout-others', async (req, res) => {
-  try {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    if (!token) return res.status(401).json({ error: 'Token manquant' });
-    const user = checkToken(token);
-    if (!user) return res.status(401).json({ error: 'Token invalide' });
-    res.json({ message: '✅ Autres sessions déconnectées' });
-  } catch(e) { res.status(500).json({ error: e.message }); }
-});
-
 app.listen(process.env.PORT || 8080, () => console.log("Guideon actif !"));
