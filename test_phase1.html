@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Phase 1 Tests</title>
+<style>
+body { background: #1a1a2e; color: #fff; font-family: monospace; padding: 20px; }
+.test { margin: 20px 0; padding: 15px; background: #0f0f1a; border-left: 3px solid #7c3aed; border-radius: 8px; }
+.result { margin-top: 10px; padding: 10px; background: #111827; border-radius: 4px; max-height: 200px; overflow-y: auto; word-break: break-all; }
+button { padding: 10px 20px; background: #7c3aed; color: #fff; border: none; border-radius: 8px; cursor: pointer; margin: 5px; }
+</style>
+</head>
+<body>
+<h1>🧪 Phase 1 - Tests</h1>
+<button onclick="testAll()">🚀 TESTER TOUS</button>
+<div id="results"></div>
+<script>
+let token = null;
+
+async function getToken() {
+  if (token) return token;
+  const r = await fetch('/api/login', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({email: 'victorbossou59@gmail.com', password: 'guideon2006'})});
+  const d = await r.json();
+  token = d.token;
+  return token;
+}
+
+async function test(name, url, opts = {}) {
+  try {
+    const r = await fetch(url, opts);
+    const d = await r.json();
+    document.getElementById('results').innerHTML += '<div class="test"><h3>' + name + '</h3><div class="result">' + JSON.stringify(d, null, 2) + '</div></div>';
+  } catch(e) {
+    document.getElementById('results').innerHTML += '<div class="test"><h3>' + name + ' ❌</h3><div class="result">' + e.message + '</div></div>';
+  }
+}
+
+async function testAll() {
+  await test('1. Météo', '/api/realtime/weather?city=Paris');
+  await test('2. News', '/api/realtime/news?category=tech');
+  await test('3. Stocks', '/api/realtime/stocks?symbols=AAPL');
+  const t = await getToken();
+  await test('4. Profil', '/api/profile', {headers: {'Authorization': 'Bearer ' + t}});
+  await test('5. Update', '/api/profile/update', {method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t}, body: JSON.stringify({name: 'Test'})});
+  await test('6. Feedback', '/api/feedback', {method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t}, body: JSON.stringify({message_id: 'test', rating: 5})});
+  await test('7. Stats', '/api/feedback/stats', {headers: {'Authorization': 'Bearer ' + t}});
+}
+</script>
+</body>
+</html>
