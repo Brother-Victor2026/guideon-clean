@@ -576,7 +576,9 @@ app.get('/api/memory/view', async (req, res) => {
 
 app.put('/api/profile', async (req, res) => {
   try {
-    const { token, name, password } = req.body;
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'Token manquant' });
+    const { name, password } = req.body;
     console.log('🔑 Token:', token);
         const user = checkToken(token);
         console.log('👤 User:', user);
@@ -591,7 +593,9 @@ app.put('/api/profile', async (req, res) => {
 
 app.post('/api/instructions', async (req, res) => {
   try {
-    const { token, instructions } = req.body;
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'Token manquant' });
+    const { instructions } = req.body;
     console.log('🔑 Token:', token);
         const user = checkToken(token);
         console.log('👤 User:', user);
